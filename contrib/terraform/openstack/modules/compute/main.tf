@@ -62,6 +62,16 @@ resource "openstack_networking_secgroup_rule_v2" "worker" {
   security_group_id = "${openstack_networking_secgroup_v2.worker.id}"
 }
 
+resource "openstack_compute_servergroup_v2" "master_sg" {
+  name     = "k8s_master_sg"
+  policies = [ "${var.master_vm_scheduler_policy}" ]
+}
+
+resource "openstack_compute_servergroup_v2" "node_sg" {
+  name     = "k8s_node_sg"
+  policies = [ "${var.node_vm_scheduler_policy}" ]
+}
+
 resource "openstack_compute_instance_v2" "bastion" {
   name       = "${var.cluster_name}-bastion-${count.index+1}"
   count      = "${var.number_of_bastions}"
@@ -87,7 +97,6 @@ resource "openstack_compute_instance_v2" "bastion" {
   provisioner "local-exec" {
     command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${var.bastion_fips[0]}/ > contrib/terraform/group_vars/no-floating.yml"
   }
-
 }
 
 resource "openstack_compute_instance_v2" "k8s_master" {
@@ -118,6 +127,9 @@ resource "openstack_compute_instance_v2" "k8s_master" {
     command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element( concat(var.bastion_fips, var.k8s_master_fips), 0)}/ > contrib/terraform/group_vars/no-floating.yml"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "k8s_master_no_etcd" {
@@ -147,6 +159,9 @@ resource "openstack_compute_instance_v2" "k8s_master_no_etcd" {
     command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element( concat(var.bastion_fips, var.k8s_master_fips), 0)}/ > contrib/terraform/group_vars/no-floating.yml"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "etcd" {
@@ -169,6 +184,13 @@ resource "openstack_compute_instance_v2" "etcd" {
     depends_on       = "${var.network_id}"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
+
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "k8s_master_no_floating_ip" {
@@ -194,6 +216,9 @@ resource "openstack_compute_instance_v2" "k8s_master_no_floating_ip" {
     depends_on       = "${var.network_id}"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "k8s_master_no_floating_ip_no_etcd" {
@@ -218,6 +243,9 @@ resource "openstack_compute_instance_v2" "k8s_master_no_floating_ip_no_etcd" {
     depends_on       = "${var.network_id}"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "k8s_node" {
@@ -248,6 +276,9 @@ resource "openstack_compute_instance_v2" "k8s_node" {
     command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element( concat(var.bastion_fips, var.k8s_node_fips), 0)}/ > contrib/terraform/group_vars/no-floating.yml"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.node_sg.id}"
+  }
 }
 
 resource "openstack_compute_instance_v2" "k8s_node_no_floating_ip" {
@@ -273,6 +304,9 @@ resource "openstack_compute_instance_v2" "k8s_node_no_floating_ip" {
     depends_on       = "${var.network_id}"
   }
 
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.node_sg.id}"
+  }
 }
 
 resource "openstack_compute_floatingip_associate_v2" "bastion" {
