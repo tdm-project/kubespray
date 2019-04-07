@@ -72,6 +72,12 @@ resource "openstack_compute_servergroup_v2" "node_sg" {
   policies = [ "${var.node_vm_scheduler_policy}" ]
 }
 
+# Bootstrap
+data "template_file" "instance_with_ext_interface_bootstrap" {
+  template = "${file("${path.module}/config_network_interfaces.sh")}"
+}
+
+
 resource "openstack_compute_instance_v2" "bastion" {
   name       = "${var.cluster_name}-bastion-${count.index+1}"
   count      = "${var.number_of_bastions}"
