@@ -6,6 +6,8 @@ variable "az_list" {
 
 variable "number_of_k8s_masters" {}
 
+variable "number_of_k8s_masters_ext_net" {}
+
 variable "number_of_k8s_masters_no_etcd" {}
 
 variable "number_of_etcd" {}
@@ -43,6 +45,8 @@ variable "flavor_etcd" {}
 variable "flavor_gfs_node" {}
 
 variable "network_name" {}
+
+variable "external_net" {}
 
 variable "flavor_bastion" {}
 

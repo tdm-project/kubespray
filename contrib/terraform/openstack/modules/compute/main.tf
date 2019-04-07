@@ -132,6 +132,45 @@ resource "openstack_compute_instance_v2" "k8s_master" {
   }
 }
 
+resource "openstack_compute_instance_v2" "k8s_master_ext_net" {
+  name       = "${var.cluster_name}-k8s-master-ext-net-${count.index+1}"
+  count      = "${var.number_of_k8s_masters_ext_net}"
+  availability_zone = "${element(var.az_list, count.index)}"
+  image_name = "${var.image}"
+  flavor_id  = "${var.flavor_k8s_master}"
+  key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
+
+  network {
+    name = "${var.external_net}"
+  }
+
+  network {
+    name = "${var.network_name}"
+  }
+
+  security_groups = ["${openstack_networking_secgroup_v2.k8s_master.name}",
+    "${openstack_networking_secgroup_v2.bastion.name}",
+    "${openstack_networking_secgroup_v2.k8s.name}",
+    "default",
+  ]
+
+  metadata = {
+    ssh_user         = "${var.ssh_user}"
+    kubespray_groups = "etcd,kube-master,${var.supplementary_master_groups},k8s-cluster,vault"
+    depends_on       = "${var.network_id}"
+  }
+
+  user_data       = "${data.template_file.instance_with_ext_interface_bootstrap.rendered}"
+
+  provisioner "local-exec" {
+    command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element( concat(var.bastion_fips, var.k8s_master_fips), 0)}/ > contrib/terraform/group_vars/no-floating.yml"
+  }
+
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.master_sg.id}"
+  }
+}
+
 resource "openstack_compute_instance_v2" "k8s_master_no_etcd" {
   name       = "${var.cluster_name}-k8s-master-ne-${count.index+1}"
   count      = "${var.number_of_k8s_masters_no_etcd}"
