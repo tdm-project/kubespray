@@ -16,6 +16,10 @@ variable "number_of_k8s_masters" {
   default = 2
 }
 
+variable "number_of_k8s_masters_ext_net" {
+  default = 0
+}
+
 variable "number_of_k8s_masters_no_etcd" {
   default = 2
 }
