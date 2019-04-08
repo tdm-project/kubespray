@@ -147,7 +147,7 @@ resource "openstack_compute_instance_v2" "k8s_master_ext_net" {
   key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
 
   network {
-    name = "${var.external_net}"
+    uuid = "${var.external_net}"
   }
 
   network {
