@@ -50,7 +50,7 @@ elif [[ $distro_name =~ "centos" ]]; then
     # detect mac address
     mac_accress=$(cat /sys/class/net/eth1/address)
     # edit eth1 configuration file
-    sed -i "s/HWADDR=.*/HWADDR=${mac_accress}/;s/eth0/eth1/" /etc/sysconfig/network-scripts/ifcfg-eth1
+    sed -i "s/HWADDR=.*/HWADDR=$mac_accress/;s/eth0/eth1/" /etc/sysconfig/network-scripts/ifcfg-eth1
     # set default gateway
     echo "GATEWAYDEV=eth0" >> /etc/sysconfig/network
 fi
