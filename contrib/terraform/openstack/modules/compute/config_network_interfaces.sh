@@ -3,9 +3,9 @@
 # Collect name of network interfaces
 all_interfaces=$(ifconfig -a | sed 's/[: \t].*//;/^\(lo\|\)$/d')
 # Collect name of network interfaces
-active_interfaces=($(ifconfig | sed 's/[: \t].*//;/^\(lo\|\)$/d'))
+#active_interfaces=($(ifconfig | sed 's/[: \t].*//;/^\(lo\|\)$/d')) # not supported
 # Set the primary as the first active interface
-primary_interface="${active_interfaces[0]}"
+primary_interface=$(ifconfig | sed 's/[: \t].*//;/^\(lo\|\)$/d')
 echo "Primary interface: $primary_interface"
 # Detect secondary interface
 for i in $all_interfaces; do
