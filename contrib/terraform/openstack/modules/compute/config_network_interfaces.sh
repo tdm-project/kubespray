@@ -24,9 +24,9 @@ if [[ -z "$primary_interface" || -z "$secondary_interface" ]]; then
 fi
 
 # detect Linux Distribution
-distro_name=$(cat /etc/*-release | grep ^NAME= | tr -d 'NAME=' | tr -d '"')
+distro_name=$(cat /etc/*-release | grep ^NAME= | tr -d 'NAME=' | tr -d '"' | awk '{ print tolower($0) }')
 # Ubuntu Distribution
-if [[ ${distro_name,,} = "ubuntu" ]]; then
+if [[ $distro_name = "ubuntu" ]]; then
     # Add external interface
     echo -e "auto $secondary_interface\niface $secondary_interface inet dhcp" > /etc/network/interfaces.d/ext-net.cfg
     systemctl restart networking
@@ -44,7 +44,7 @@ if [[ ${distro_name,,} = "ubuntu" ]]; then
     # Update routes
     #route add default gw $public_net_gateway $secondary_interface
     #route del default gw $private_net_gateway $primary_interface
-elif [[ ${distro_name,,} =~ "centos" ]]; then 
+elif [[ $distro_name =~ "centos" ]]; then 
     # use eth0 configuration file as template for the eth1 interface
     cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1}
     # detect mac address
