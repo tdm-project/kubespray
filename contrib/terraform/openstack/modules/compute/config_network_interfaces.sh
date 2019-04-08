@@ -1,26 +1,26 @@
 #!/bin/bash
 
 # Collect name of network interfaces
-all_interfaces=($(ifconfig -a | sed 's/[: \t].*//;/^\(lo\|\)$/d'))
+all_interfaces=$(ifconfig -a | sed 's/[: \t].*//;/^\(lo\|\)$/d')
 # Collect name of network interfaces
 active_interfaces=($(ifconfig | sed 's/[: \t].*//;/^\(lo\|\)$/d'))
 # Set the primary as the first active interface
 primary_interface="${active_interfaces[0]}"
 echo "Primary interface: $primary_interface"
 # Detect secondary interface
-for i in "${all_interfaces[@]}"; do 
-if [[ "$i" != "$primary_interface"  ]]; then 
-    echo "Secondary interface: $i"
-    secondary_interface="$i"
-    break
-fi
+for i in $all_interfaces; do
+    if [[ "$i" != "$primary_interface"  ]]; then
+        echo "Secondary interface: $i"
+        secondary_interface="$i"
+        break
+    fi
 done
 
 # Check if network interfaces have been detected
 if [[ -z "$primary_interface" || -z "$secondary_interface" ]]; then
-echo "Couldn't retrieve network interfaces" >&2
-echo "Primary interface: $primary_interface; Public gateway: $secondary_interface" >&2
-exit 1
+    echo "Couldn't retrieve network interfaces" >&2
+    echo "Primary interface: $primary_interface; Public gateway: $secondary_interface" >&2
+    exit 1
 fi
 
 # detect Linux Distribution
