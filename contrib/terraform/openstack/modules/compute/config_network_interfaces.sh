@@ -25,38 +25,40 @@ fi
 
 # detect Linux Distribution
 distro_name=$(cat /etc/*-release | grep ^NAME= | tr -d 'NAME=' | tr -d '"' | awk '{ print tolower($0) }')
+distro_version_id=$(cat /etc/*-release | grep ^VERSION_ID= | tr -d 'VERSION_ID=' | tr -d '"')
 # Ubuntu Distribution
-if [[ $distro_name = "ubuntu" ]]; then
+if [[ $distro_name =~ "ubuntu" && $distro_version_id == "16.04" ]]; then
     # Add external interface
     echo -e "auto $secondary_interface\niface $secondary_interface inet dhcp" > /etc/network/interfaces.d/ext-net.cfg
+    # restart network to apply changes
     systemctl restart networking
-    # Detect gateways
-    private_net_gateway=$(tac "/var/lib/dhcp/dhclient.$primary_interface.leases" | grep -m1 'option routers' | awk '{print $3}' | sed -e 's/;//')
-    public_net_gateway=$(tac "/var/lib/dhcp/dhclient.$secondary_interface.leases" | grep -m1 'option routers' | awk '{print $3}' | sed -e 's/;//')
-    echo -e "Privare Net Gateway: $private_net_gateway"
-    echo -e "Public Net Gateway: $public_net_gateway"
-    # Chec if gateway has been detected
-    if [[ -z "$private_net_gateway" || -z "$public_net_gateway" ]]; then 
-        echo "Couldn't retrieve gateway routers" >&2
-        echo "Private gateway: $private_net_gateway; Public gateway: $public_net_gateway" >&2
-        exit 1
-    fi
-    # Update routes
-    #route add default gw $public_net_gateway $secondary_interface
-    #route del default gw $private_net_gateway $primary_interface
+
+elif [[ $distro_name =~ "ubuntu" && $distro_version_id == "18.04" ]]; then
+    # detect mac address
+    mac_address=$(cat /sys/class/net/$secondary_interface/address)
+    # Add external interface
+    cat >> /etc/netplan/50-cloud-init.yaml <<END
+        $secondary_interface:
+            dhcp4: true
+            match:
+                macaddress: $mac_address
+            set-name: $secondary_interface
+END
+    # restart network to apply changes
+    netplan apply
+
 elif [[ $distro_name =~ "centos" ]]; then 
     # use eth0 configuration file as template for the eth1 interface
     cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1}
     # detect mac address
-    mac_accress=$(cat /sys/class/net/eth1/address)
+    mac_address=$(cat /sys/class/net/eth1/address)
     # edit eth1 configuration file
-    sed -i "s/HWADDR=.*/HWADDR=$mac_accress/;s/eth0/eth1/" /etc/sysconfig/network-scripts/ifcfg-eth1
+    sed -i "s/HWADDR=.*/HWADDR=$mac_address/;s/eth0/eth1/" /etc/sysconfig/network-scripts/ifcfg-eth1
     # set default gateway
     echo "GATEWAYDEV=eth0" >> /etc/sysconfig/network
+    # restart network to apply changes
+    systemctl restart network
 fi
-
-# restart network to apply changes
-systemctl restart network
 
 # Primary interface info
 network_1_addr=$(ip -o -4 a | awk "/\<$primary_interface\>/{print \$4}") 
