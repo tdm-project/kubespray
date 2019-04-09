@@ -168,10 +168,6 @@ resource "openstack_compute_instance_v2" "k8s_master_ext_net" {
 
   user_data       = "${data.template_file.instance_with_ext_interface_bootstrap.rendered}"
 
-  # provisioner "local-exec" {
-  #   command = "sed s/USER/${var.ssh_user}/ contrib/terraform/openstack/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element(concat(openstack_compute_instance_v2.k8s_master_ext_net.*.network.0.fixed_ip_v4, list("")), count.index)}/ > contrib/terraform/group_vars/no-floating.yml"
-  # }
-
   scheduler_hints {
     group  = "${openstack_compute_servergroup_v2.master_sg.id}"
   }
