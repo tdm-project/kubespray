@@ -74,7 +74,7 @@ output "router_id" {
 }
 
 output "k8s_master_fips" {
-  value = "${module.ips.k8s_master_fips}"
+  value = ["${module.ips.k8s_master_fips}", "${module.compute.k8s_master_ext_net_ips}"]
 }
 
 output "k8s_node_fips" {
