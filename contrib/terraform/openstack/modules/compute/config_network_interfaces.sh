@@ -24,8 +24,8 @@ if [[ -z "$primary_interface" || -z "$secondary_interface" ]]; then
 fi
 
 # detect Linux Distribution
-distro_name=$(cat /etc/*-release | grep ^NAME= | tr -d 'NAME=' | tr -d '"' | awk '{ print tolower($0) }')
-distro_version_id=$(cat /etc/*-release | grep ^VERSION_ID= | tr -d 'VERSION_ID=' | tr -d '"')
+distro_name=$(cat /etc/*-release | awk -F= '/\<NAME=/ { gsub("\"", "", $0); print tolower($2); }')
+distro_version_id=$(cat /etc/*-release | awk -F= '/\<VERSION_ID=/ { gsub("\"", "", $0); print $2; }')
 # Ubuntu Distribution
 if [[ $distro_name =~ "ubuntu" && $distro_version_id == "16.04" ]]; then
     # Add external interface
