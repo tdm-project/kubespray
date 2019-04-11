@@ -30,6 +30,20 @@ distro_version_id=$(cat /etc/*-release | awk -F= '/\<VERSION_ID=/ { gsub("\"", "
 if [[ $distro_name =~ "ubuntu" && $distro_version_id == "16.04" ]]; then
     # Add external interface
     echo -e "auto $secondary_interface\niface $secondary_interface inet dhcp" > /etc/network/interfaces.d/ext-net.cfg
+    # 
+    cat >> /etc/network/if-up.d/999-ens4-route-up <<END
+#!/bin/bash
+if [[ "\$IFACE" == ens4 ]]; then
+    echo "######## Hi!! I'm ens4-route-up #######"
+    echo "Current routing table"
+    route -n
+    echo "Trying to remove default route through ens4, if it exists"
+    route -4 del -net 0.0.0.0 netmask 0.0.0.0 dev \$IFACE || true
+    echo "Modified routing table"
+    route -n
+fi
+END
+    chmod 755 /etc/network/if-up.d/999-ens4-route-up
     # restart network to apply changes
     systemctl restart networking
 
@@ -37,13 +51,28 @@ elif [[ $distro_name =~ "ubuntu" && $distro_version_id == "18.04" ]]; then
     # detect mac address
     mac_address=$(cat /sys/class/net/$secondary_interface/address)
     # Add external interface
+    sed -i -e "/\<$primary_interface:/a\            critical: true" /etc/netplan/50-cloud-init.yaml
     cat >> /etc/netplan/50-cloud-init.yaml <<END
         $secondary_interface:
+            critical: true
             dhcp4: true
             match:
                 macaddress: $mac_address
             set-name: $secondary_interface
 END
+    cat >> /etc/networkd-dispatcher/routable.d/999-ens4-route-up <<END
+#!/bin/bash
+if [[ "\$IFACE" == ens4 ]]; then
+    echo "######## Hi!! I'm ens4-route-up #######"
+    echo "Current routing table"
+    route -n
+    echo "Trying to remove default route through ens4, if it exists"
+    route -4 del -net 0.0.0.0 netmask 0.0.0.0 dev \$IFACE || true
+    echo "Modified routing table"
+    route -n
+fi
+END
+    chmod 755 /etc/networkd-dispatcher/routable.d/999-ens4-route-up
     # restart network to apply changes
     netplan apply
 
