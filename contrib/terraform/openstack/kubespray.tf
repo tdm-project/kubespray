@@ -36,6 +36,7 @@ module "compute" {
   number_of_k8s_nodes                          = "${var.number_of_k8s_nodes}"
   number_of_bastions                           = "${var.number_of_bastions}"
   number_of_k8s_nodes_no_floating_ip           = "${var.number_of_k8s_nodes_no_floating_ip}"
+  number_of_k8s_nodes_ext_net                  = "${var.number_of_k8s_nodes_ext_net}",
   number_of_gfs_nodes_no_floating_ip           = "${var.number_of_gfs_nodes_no_floating_ip}"
   gfs_volume_size_in_gb                        = "${var.gfs_volume_size_in_gb}"
   public_key_path                              = "${var.public_key_path}"
@@ -78,7 +79,7 @@ output "k8s_master_fips" {
 }
 
 output "k8s_node_fips" {
-  value = "${module.ips.k8s_node_fips}"
+  value = ["${module.compute.k8s_node_ext_net_ips}", "${module.ips.k8s_node_fips}"]
 }
 
 output "bastion_fips" {

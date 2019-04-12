@@ -150,10 +150,6 @@ resource "openstack_compute_instance_v2" "k8s_master_ext_net" {
     uuid = "${var.external_net}"
   }
 
-  # network {
-  #   name = "${var.network_name}"
-  # }
-
   security_groups = ["${openstack_networking_secgroup_v2.k8s_master.name}",
     "${openstack_networking_secgroup_v2.bastion.name}",
     "${openstack_networking_secgroup_v2.k8s.name}",
@@ -325,6 +321,35 @@ resource "openstack_compute_instance_v2" "k8s_node" {
 resource "openstack_compute_instance_v2" "k8s_node_no_floating_ip" {
   name       = "${var.cluster_name}-k8s-node-nf-${count.index+1}"
   count      = "${var.number_of_k8s_nodes_no_floating_ip}"
+  availability_zone = "${element(var.az_list, count.index)}"
+  image_name = "${var.image}"
+  flavor_id  = "${var.flavor_k8s_node}"
+  key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
+
+  network {
+    name = "${var.network_name}"
+  }
+
+  security_groups = ["${openstack_networking_secgroup_v2.k8s.name}",
+    "${openstack_networking_secgroup_v2.worker.name}",
+    "default",
+  ]
+
+  metadata = {
+    ssh_user         = "${var.ssh_user}"
+    kubespray_groups = "kube-node,k8s-cluster,no-floating,${var.supplementary_node_groups}"
+    depends_on       = "${var.network_id}"
+  }
+
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.node_sg.id}"
+  }
+}
+
+
+resource "openstack_compute_instance_v2" "k8s_node_ext_net" {
+  name       = "${var.cluster_name}-k8s-node-ext-net-${count.index+1}"
+  count      = "${var.number_of_k8s_nodes_ext_net}"
   availability_zone = "${element(var.az_list, count.index)}"
   image_name = "${var.image}"
   flavor_id  = "${var.flavor_k8s_node}"
