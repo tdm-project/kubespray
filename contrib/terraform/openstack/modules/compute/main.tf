@@ -150,9 +150,9 @@ resource "openstack_compute_instance_v2" "k8s_master_ext_net" {
     uuid = "${var.external_net}"
   }
 
-  network {
-    name = "${var.network_name}"
-  }
+  # network {
+  #   name = "${var.network_name}"
+  # }
 
   security_groups = ["${openstack_networking_secgroup_v2.k8s_master.name}",
     "${openstack_networking_secgroup_v2.bastion.name}",
@@ -331,7 +331,7 @@ resource "openstack_compute_instance_v2" "k8s_node_no_floating_ip" {
   key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
 
   network {
-    name = "${var.network_name}"
+    uuid = "${var.external_net}"
   }
 
   security_groups = ["${openstack_networking_secgroup_v2.k8s.name}",
