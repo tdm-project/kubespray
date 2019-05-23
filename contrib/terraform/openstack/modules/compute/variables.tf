@@ -14,6 +14,8 @@ variable "number_of_etcd" {}
 
 variable "number_of_k8s_nodes_ext_net" {}
 
+variable "number_of_k8s_data_nodes_ext_net" {}
+
 variable "number_of_k8s_masters_no_floating_ip" {}
 
 variable "number_of_k8s_masters_no_floating_ip_no_etcd" {}
@@ -41,6 +43,8 @@ variable "ssh_user_gfs" {}
 variable "flavor_k8s_master" {}
 
 variable "flavor_k8s_node" {}
+
+variable "flavor_k8s_data_node" {}
 
 variable "flavor_etcd" {}
 

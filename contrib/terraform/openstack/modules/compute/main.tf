@@ -377,10 +377,10 @@ resource "openstack_compute_instance_v2" "k8s_node_ext_net" {
 
 resource "openstack_compute_instance_v2" "k8s_data_node_ext_net" {
   name       = "${var.cluster_name}-k8s-data-node-ext-net-${count.index+1}"
-  count      = "${var.number_of_k8s_nodes_ext_net}"
+  count      = "${var.number_of_k8s_data_nodes_ext_net}"
   availability_zone = "${element(var.az_list, count.index)}"
   image_name = "${var.image}"
-  flavor_id  = "${var.flavor_k8s_node}"
+  flavor_id  = "${var.flavor_k8s_data_node}"
   key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
 
   network {
