@@ -375,6 +375,35 @@ resource "openstack_compute_instance_v2" "k8s_node_ext_net" {
   }
 }
 
+resource "openstack_compute_instance_v2" "k8s_data_node_ext_net" {
+  name       = "${var.cluster_name}-k8s-data-node-ext-net-${count.index+1}"
+  count      = "${var.number_of_k8s_nodes_ext_net}"
+  availability_zone = "${element(var.az_list, count.index)}"
+  image_name = "${var.image}"
+  flavor_id  = "${var.flavor_k8s_node}"
+  key_pair   = "${openstack_compute_keypair_v2.k8s.name}"
+
+  network {
+    uuid = "${var.external_net}"
+  }
+
+  security_groups = ["${openstack_networking_secgroup_v2.k8s.name}",
+    "${openstack_networking_secgroup_v2.worker.name}",
+    "default",
+  ]
+
+  metadata = {
+    ssh_user         = "${var.ssh_user}"
+    kubespray_groups = "kube-node,k8s-cluster,no-floating,k8s-data-node,${var.supplementary_node_groups}"
+    depends_on       = "${var.network_id}"
+  }
+
+  scheduler_hints {
+    group  = "${openstack_compute_servergroup_v2.node_sg.id}"
+  }
+}
+
+
 resource "openstack_compute_floatingip_associate_v2" "bastion" {
   count       = "${var.number_of_bastions}"
   floating_ip = "${var.bastion_fips[count.index]}"
