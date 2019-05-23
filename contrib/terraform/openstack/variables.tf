@@ -48,6 +48,10 @@ variable "number_of_k8s_nodes_ext_net" {
   default = 0
 }
 
+variable "number_of_k8s_data_nodes_ext_net" {
+  default = 0
+}
+
 variable "number_of_gfs_nodes_no_floating_ip" {
   default = 0
 }
@@ -92,6 +96,11 @@ variable "flavor_k8s_master" {
 }
 
 variable "flavor_k8s_node" {
+  description = "Use 'nova flavor-list' command to see what your OpenStack instance uses for IDs"
+  default     = 3
+}
+
+variable "flavor_k8s_data_node" {
   description = "Use 'nova flavor-list' command to see what your OpenStack instance uses for IDs"
   default     = 3
 }
